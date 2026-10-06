@@ -198,6 +198,9 @@ function draw() {
     for (let c = 0; c < COLS; c++)
       drawBlock(ctx, c, r, board[r][c], BLOCK);
 
+  // la pieza que colisionó al aparecer no se dibuja tras el game over
+  if (gameOver) return;
+
   // ghost
   const gy = ghostY();
   for (let r = 0; r < current.shape.length; r++)
@@ -281,6 +284,8 @@ function loop(ts) {
       lockPiece();
     }
   }
+  // endGame() no puede cancelar el frame en curso; hay que cortar el bucle aquí
+  if (gameOver) return;
   draw();
   animId = requestAnimationFrame(loop);
 }
