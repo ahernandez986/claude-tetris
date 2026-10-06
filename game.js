@@ -39,6 +39,10 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const themeBtn = document.getElementById('theme-toggle');
+
+const THEME_KEY = 'tetris-theme';
+let gridColor = '#22222e';
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -169,7 +173,7 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -216,6 +220,31 @@ function drawNext() {
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+}
+
+function storedTheme() {
+  try { return localStorage.getItem(THEME_KEY); } catch { return null; }
+}
+
+function initialTheme() {
+  const saved = storedTheme();
+  if (saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function setTheme(theme, persist) {
+  document.documentElement.dataset.theme = theme;
+  gridColor = getComputedStyle(document.documentElement).getPropertyValue('--grid').trim();
+  const isLight = theme === 'light';
+  themeBtn.setAttribute('aria-checked', String(isLight));
+  themeBtn.textContent = isLight ? '☀ Claro' : '☾ Oscuro';
+  if (persist) {
+    try { localStorage.setItem(THEME_KEY, theme); } catch {}
+  }
+  if (current) {
+    draw();
+    drawNext();
+  }
 }
 
 function endGame() {
@@ -300,5 +329,12 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+themeBtn.addEventListener('click', () => {
+  setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
+  themeBtn.blur(); // evita que Space active el botón en vez de la caída
+});
+
+setTheme(initialTheme(), false);
 
 init();
