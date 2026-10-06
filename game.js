@@ -41,8 +41,19 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const menuRestartBtn = document.getElementById('menu-restart-btn');
+const controlsToggle = document.getElementById('controls-toggle');
+const menuControls = document.getElementById('menu-controls');
+const startLevelSelect = document.getElementById('start-level');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let startLevel = 1;     // nivel elegido en el menú (próxima partida)
+let gameStartLevel = 1; // nivel inicial de la partida en curso
+let inputGuardUntil = 0; // ignora teclas de juego justo después de reanudar
+let blockRepeats = false; // ignora autorepetición de teclas mantenidas al reanudar
+const INPUT_GUARD_MS = 150;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -108,7 +119,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = Math.max(gameStartLevel, Math.floor(lines / 10) + 1);
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
@@ -228,17 +239,59 @@ function endGame() {
   overlay.classList.remove('hidden');
 }
 
+function closePauseMenu() {
+  if (pauseMenu.contains(document.activeElement)) document.activeElement.blur();
+  pauseMenu.classList.add('hidden');
+  menuControls.classList.add('hidden');
+  controlsToggle.setAttribute('aria-expanded', 'false');
+}
+
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    closePauseMenu();
+    inputGuardUntil = performance.now() + INPUT_GUARD_MS;
+    blockRepeats = true;
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    pauseMenu.classList.remove('hidden');
+    resumeBtn.focus();
+  }
+}
+
+// Navegación con flechas entre los controles visibles del menú
+function moveMenuFocus(dir) {
+  const items = [...pauseMenu.querySelectorAll('button, select')]
+    .filter(el => el.offsetParent !== null);
+  if (!items.length) return;
+  const i = items.indexOf(document.activeElement);
+  const nextIdx = i < 0 ? 0 : (i + dir + items.length) % items.length;
+  items[nextIdx].focus();
+}
+
+function handleMenuKey(e) {
+  const onSelect = document.activeElement === startLevelSelect;
+  const onButton = document.activeElement instanceof HTMLButtonElement &&
+    pauseMenu.contains(document.activeElement);
+  switch (e.code) {
+    case 'Tab':
+      // mantiene el foco dentro del menú
+      e.preventDefault();
+      moveMenuFocus(e.shiftKey ? -1 : 1);
+      break;
+    case 'ArrowUp':
+    case 'ArrowDown':
+      if (onSelect) return; // el selector usa las flechas para cambiar valor
+      e.preventDefault();
+      moveMenuFocus(e.code === 'ArrowUp' ? -1 : 1);
+      break;
+    case 'Space':
+      // Espacio solo activa botones con foco; nunca hard drop ni scroll
+      if (!onButton && !onSelect) e.preventDefault();
+      break;
   }
 }
 
@@ -263,23 +316,38 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  startLevel = parseInt(startLevelSelect.value, 10) || 1;
+  gameStartLevel = startLevel;
+  level = gameStartLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  closePauseMenu();
+  inputGuardUntil = performance.now() + INPUT_GUARD_MS;
+  blockRepeats = true;
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (e.repeat) return;
+    e.preventDefault();
+    togglePause();
+    return;
+  }
+  if (paused) { handleMenuKey(e); return; }
+  if (gameOver) return;
+  if (performance.now() < inputGuardUntil || (blockRepeats && e.repeat)) {
+    if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    return;
+  }
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -302,7 +370,18 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
+document.addEventListener('keyup', () => { blockRepeats = false; });
+
 restartBtn.addEventListener('click', init);
+resumeBtn.addEventListener('click', () => { if (paused) togglePause(); });
+menuRestartBtn.addEventListener('click', init);
+controlsToggle.addEventListener('click', () => {
+  const open = menuControls.classList.toggle('hidden') === false;
+  controlsToggle.setAttribute('aria-expanded', String(open));
+});
+startLevelSelect.addEventListener('change', () => {
+  startLevel = parseInt(startLevelSelect.value, 10) || 1;
+});
 
 const themeToggle = document.getElementById('theme-toggle');
 const toggleIcon = themeToggle.querySelector('.toggle-icon');
