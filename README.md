@@ -17,6 +17,7 @@ Implementación del clásico **Tetris** en JavaScript vanilla, usando HTML5 Canv
     - [Opción 1: abrir el archivo directamente](#opción-1-abrir-el-archivo-directamente)
     - [Opción 2: servidor local (recomendado)](#opción-2-servidor-local-recomendado)
   - [Controles](#controles)
+  - [Skins](#skins)
   - [Cómo funciona](#cómo-funciona)
     - [1. `index.html`](#1-indexhtml)
     - [2. `style.css`](#2-stylecss)
@@ -43,6 +44,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
+- **Skins** visuales (Retro, Neón, Pastel, Pixel art) con selector en el panel lateral.
 - **Tema claro / oscuro** con un interruptor en el panel lateral. Se recuerda la elección (`localStorage`); si no hay ninguna guardada, se usa `prefers-color-scheme` y, por defecto, el modo oscuro.
 
 ---
@@ -87,6 +89,21 @@ Después abre `http://localhost:8000` en el navegador.
 | `↓`       | Soft drop (bajar más rápido)      |
 | `Espacio` | Hard drop (caída instantánea)     |
 | `P`       | Pausar / reanudar                 |
+
+---
+
+## Skins
+
+En el panel lateral hay un selector **SKIN** que cambia la apariencia del tablero al instante, sin recargar la página:
+
+| Skin          | Aspecto                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| **Retro**     | Bloques cuadrados y colores planos (el estilo clásico).                 |
+| **Neón**      | Fondo negro (también en modo claro) y brillo con `shadowBlur`.          |
+| **Pastel**    | Colores suaves y esquinas redondeadas (`roundRect` o `arcTo`).          |
+| **Pixel art** | Textura en damero sobre cada bloque, con bisel claro/oscuro.            |
+
+La elección se guarda en `localStorage` (`tetris-skin`). Cada skin del objeto `SKINS` en `game.js` define su paleta `colors` (en paralelo a `PIECES`) y su función `drawCell`.
 
 ---
 
@@ -175,7 +192,7 @@ Algunos parámetros fáciles de tunear en `game.js`:
 | `COLS`         | Columnas del tablero                     | `10`                  |
 | `ROWS`         | Filas del tablero                        | `20`                  |
 | `BLOCK`        | Tamaño en píxeles de cada celda          | `30`                  |
-| `COLORS`       | Paleta de colores por tipo de pieza      | 7 colores             |
+| `SKINS`        | Skins: paleta por tipo de pieza y dibujo | 4 skins, 8 colores    |
 | `LINE_SCORES`  | Puntos por 1, 2, 3 o 4 líneas eliminadas | `[0,100,300,500,800]` |
 | `dropInterval` | Velocidad inicial de caída en ms         | `1000`                |
 
