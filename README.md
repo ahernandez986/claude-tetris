@@ -17,6 +17,7 @@ Implementación del clásico **Tetris** en JavaScript vanilla, usando HTML5 Canv
     - [Opción 1: abrir el archivo directamente](#opción-1-abrir-el-archivo-directamente)
     - [Opción 2: servidor local (recomendado)](#opción-2-servidor-local-recomendado)
   - [Controles](#controles)
+  - [Tabla de récords](#tabla-de-récords)
   - [Cómo funciona](#cómo-funciona)
     - [1. `index.html`](#1-indexhtml)
     - [2. `style.css`](#2-stylecss)
@@ -44,6 +45,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
 - **Tema claro / oscuro** con un interruptor en el panel lateral. Se recuerda la elección (`localStorage`); si no hay ninguna guardada, se usa `prefers-color-scheme` y, por defecto, el modo oscuro.
+- **Tabla de récords local**: top 5 puntuaciones con nombre del jugador, más el mejor combo y las líneas máximas históricas, guardados en `localStorage`.
 
 ---
 
@@ -90,6 +92,18 @@ Después abre `http://localhost:8000` en el navegador.
 
 ---
 
+## Tabla de récords
+
+Las mejores puntuaciones se guardan en el navegador (`localStorage`, clave `tetris-records`):
+
+- Se guarda el **top 5** por puntuación, con nombre, líneas, nivel y fecha de cada partida.
+- La **pantalla de inicio** muestra la tabla; la partida empieza al pulsar **Jugar**.
+- En el **Game Over**, si la puntuación entra en el top aparece «¡Nuevo récord!» y un campo para escribir el nombre (máx. 12 caracteres, por defecto `JUGADOR`). Se guarda con **Guardar** o con `Enter`, y la entrada nueva se resalta en la tabla.
+- También se registran el **mejor combo** (piezas seguidas que limpian al menos una línea) y las **líneas máximas** de una partida, aunque la puntuación no entre en el top.
+- El botón **Borrar récords** (en la pantalla de inicio y en el Game Over) elimina todos los datos tras pedir confirmación.
+
+---
+
 ## Cómo funciona
 
 El juego se compone de tres archivos que cooperan:
@@ -100,7 +114,8 @@ Define la estructura visual:
 
 - Un `<canvas id="board">` de **300 × 600** píxeles donde se renderiza el tablero.
 - Un panel lateral con `SCORE`, `LINES`, `LEVEL`, vista de la siguiente pieza y la lista de controles.
-- Un overlay para los estados **PAUSA** y **GAME OVER**.
+- Un overlay para los estados **PAUSA** y **GAME OVER** (este último con la tabla de récords).
+- Una pantalla de inicio con los récords y el botón **Jugar**.
 
 ### 2. `style.css`
 
