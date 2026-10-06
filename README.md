@@ -35,6 +35,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 
 - Tablero de **10 × 20** celdas.
 - Las **7 piezas estándar** (I, O, T, S, Z, J, L) con colores diferenciados.
+- La **tuerca** (N): una pieza reto de 3 × 3 con un hueco en el centro, que aparece con la misma probabilidad que las demás. Al colocarla deja un hueco atrapado; solo se libera al eliminar la fila superior de la tuerca, y entonces se puede rellenar.
 - **Rotación** con _wall kicks_ básicos (pequeños desplazamientos para que la pieza pueda rotar pegada a la pared).
 - **Soft drop** (bajada acelerada) y **hard drop** (caída instantánea).
 - **Pieza fantasma** (_ghost piece_): muestra dónde aterrizará la pieza actual.
@@ -109,7 +110,7 @@ Aporta el aspecto visual con estética _dark / retro arcade_: fondo oscuro, tipo
 
 Contiene toda la lógica del juego. A grandes rasgos:
 
-- **Modelo del tablero**: una matriz `ROWS × COLS` donde cada celda guarda `0` (vacía) o un índice de color (1–7) que identifica la pieza.
+- **Modelo del tablero**: una matriz `ROWS × COLS` donde cada celda guarda `0` (vacía) o un índice de color (1–8) que identifica la pieza.
 - **Piezas**: definidas como matrices cuadradas. Para rotar se calcula la transposición + reverso de filas (`rotateCW`).
 - **Detección de colisiones** (`collide`): comprueba que ninguna celda de la pieza salga del tablero ni se solape con bloques ya fijados.
 - **Wall kicks** (`tryRotate`): si la rotación choca, intenta desplazar la pieza ±1 y ±2 columnas antes de descartar el giro.

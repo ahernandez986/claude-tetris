@@ -18,7 +18,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 All logic is in one script loaded by `index.html`. It uses module-level mutable state (`board`, `current`, `next`, `score`, `lines`, `level`, `paused`, `gameOver`, `dropAccum`, `dropInterval`, `animId`) with no classes or modules. `init()` resets all state and is also the restart button handler.
 
-- **Board model**: `ROWS × COLS` matrix. Each cell is `0` (empty) or a piece type index `1–7`. The same index is used in `PIECES[type]` (the shape matrices store the type number as their filled value) and `COLORS[type]`. Index `0` is `null` in both arrays, so new piece types have to keep all three in sync.
+- **Board model**: `ROWS × COLS` matrix. Each cell is `0` (empty) or a piece type index `1–8`. The same index is used in `PIECES[type]` (the shape matrices store the type number as their filled value) and `COLORS[type]`. Index `0` is `null` in both arrays, so new piece types have to keep all three in sync.
 - **Pieces**: `{ type, shape, x, y }`. `shape` is a square matrix that gets copied from `PIECES`. Rotation (`rotateCW`) builds a new matrix. `tryRotate` applies simple horizontal wall kicks `[0, -1, 1, -2, 2]`, not SRS.
 - **Collision**: everything goes through `collide(shape, ox, oy)`. Movement, rotation, the ghost piece (`ghostY`), and the spawn/game-over check all call it. Cells with `y < 0` are allowed (above the board).
 - **Lifecycle**: `lockPiece()` runs `merge()` → `clearLines()` → `spawn()`. `spawn()` promotes `next` to `current` and calls `endGame()` if the new piece collides immediately.
